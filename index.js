@@ -5,13 +5,34 @@ window.Bindable = (function() {
     context = document[context] || document
     this.dataKey = dataKey || 'data-bindable'
     this.instanceKey = this.dataKey.replace(/data-/g, '') + 'Instance'
-    this.bindables = context.querySelectorAll('[' + this.dataKey + ']')
+    this.bindables = _toArray(context.querySelectorAll('[' + this.dataKey + ']'))
+    if (window.globalBindables == undefined) {
+      window.globalBindables = []
+    }
   }
 
 
   Bindable.prototype.bindAll = function() {
     for (var i = 0, len = this.bindables.length; i < len; i += 1) {
       this.bind(this.bindables[i])
+    }
+    return this
+  };
+
+
+  Bindable.prototype.renew = function() {
+    // bind only new elements
+    for (var i = 0, len = this.bindables.length; i < len; i += 1) {
+      if (globalBindables.indexOf(this.bindables[i]) == -1) {
+        this.bind(this.bindables[i])
+        globalBindables.push(this.bindables[i])
+      }
+    }
+    // purge global variable
+    for (var i = 0, len = globalBindables.length; i < len; i += 1) {
+      if (this.bindables.indexOf(globalBindables[i]) == -1) {
+        globalBindables[i][this.instanceKey] = null
+      }
     }
     return this
   };
@@ -38,6 +59,7 @@ window.Bindable = (function() {
       }
     }
     this.bindables = []
+    window.globalBindables = []
     return this
   };
 
@@ -49,6 +71,7 @@ window.Bindable = (function() {
     if (_class = this.constructor.getClass(key)) {
       if (!el[this.instanceKey]) {
         el[this.instanceKey] = new _class(el)
+        globalBindables.push(el)
       }
       return el[this.instanceKey]
     } else  {
@@ -74,7 +97,12 @@ window.Bindable = (function() {
   };
 
 
+  var _toArray = function(object) {
+    return [].map.call(object, function(element) {
+      return element;
+    })
+  };
+
   return Bindable
 
 })();
-
